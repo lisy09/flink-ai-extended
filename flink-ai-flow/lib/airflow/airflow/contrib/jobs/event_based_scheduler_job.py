@@ -52,7 +52,7 @@ from airflow.utils.types import DagRunType
 
 from airflow.utils.mailbox import Mailbox
 from airflow.events.scheduler_events import (
-    StopSchedulerEvent, TaskSchedulingEvent, DagExecutableEvent, TaskStatusChangedEvent, EventHandleEvent, RequestEvent,
+    StopSchedulerEvent, TaskSchedulingEvent, DagExecutableEvent, TaskStateChangedEvent, EventHandleEvent, RequestEvent,
     ResponseEvent, StopDagEvent, ParseDagRequestEvent, ParseDagResponseEvent, SchedulerInnerEventUtil,
     BaseUserDefineMessage, UserDefineMessageType, SCHEDULER_NAMESPACE, DagRunFinishedEvent, PeriodicEvent)
 
@@ -74,6 +74,7 @@ class EventBasedScheduler(LoggingMixin):
                  task_event_manager: DagRunEventManager,
                  executor: BaseExecutor,
                  notification_client: NotificationClient,
+                 server_uri: str,
                  context=None,
                  periodic_manager: PeriodicManager = None):
         super().__init__(context)
@@ -86,6 +87,7 @@ class EventBasedScheduler(LoggingMixin):
         self._timer_handler = None
         self.timers = sched.scheduler()
         self.periodic_manager = periodic_manager
+        self.server_uri = server_uri
 
     def sync(self):
 
@@ -138,12 +140,17 @@ class EventBasedScheduler(LoggingMixin):
                     self._process_request_event(event)
                 elif isinstance(event, TaskSchedulingEvent):
                     self._schedule_task(event)
-                elif isinstance(event, TaskStatusChangedEvent):
+                elif isinstance(event, TaskStateChangedEvent):
                     dagrun = self._find_dagrun(event.dag_id, event.execution_date, session)
-                    tasks = self._find_scheduled_tasks(dagrun, session)
-                    self._send_scheduling_task_events(tasks, SchedulingAction.START)
-                    if dagrun.state in State.finished:
-                        self.mailbox.send_message(DagRunFinishedEvent(dagrun.run_id).to_event())
+                    if dagrun is not None:
+                        dag_run_id = DagRunId(dagrun.dag_id, dagrun.run_id)
+                        self.task_event_manager.handle_event(dag_run_id, origin_event)
+                        tasks = self._find_scheduled_tasks(dagrun, session)
+                        self._send_scheduling_task_events(tasks, SchedulingAction.START)
+                        if dagrun.state in State.finished:
+                            self.mailbox.send_message(DagRunFinishedEvent(dagrun.run_id).to_event())
+                    else:
+                        self.log.warning("dagrun is None for dag_id:{} execution_date: {}".format(event.dag_id, event.execution_date))
                 elif isinstance(event, DagExecutableEvent):
                     dagrun = self._create_dag_run(event.dag_id, session=session)
                     tasks = self._find_scheduled_tasks(dagrun, session)
@@ -565,6 +572,7 @@ class EventBasedSchedulerJob(BaseJob):
         )
         self.task_event_manager = DagRunEventManager(self.mailbox)
         self.executor.set_mailbox(self.mailbox)
+        self.executor.set_server_uri(server_uri)
         self.notification_client: NotificationClient = NotificationClient(server_uri=server_uri,
                                                                           default_namespace=SCHEDULER_NAMESPACE)
         self.periodic_manager = PeriodicManager(self.mailbox)
@@ -574,6 +582,7 @@ class EventBasedSchedulerJob(BaseJob):
             self.task_event_manager,
             self.executor,
             self.notification_client,
+            server_uri,
             None,
             self.periodic_manager
         )

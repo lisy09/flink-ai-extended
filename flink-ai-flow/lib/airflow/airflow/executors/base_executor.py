@@ -20,7 +20,7 @@ import time
 from collections import OrderedDict
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from airflow.events.scheduler_events import TaskStatusChangedEvent
+from airflow.events.scheduler_events import TaskStateChangedEvent
 from sqlalchemy.orm import Session, selectinload
 
 from airflow.configuration import conf
@@ -71,9 +71,13 @@ class BaseExecutor(LoggingMixin):
         self.running: Set[TaskInstanceKey] = set()
         self.event_buffer: Dict[TaskInstanceKey, EventBufferValueType] = {}
         self._mailbox = None
+        self._server_uri = None
 
     def set_mailbox(self, mailbox):
         self._mailbox = mailbox
+
+    def set_server_uri(self, server_uri):
+        self._server_uri = server_uri
 
     def start(self):  # pragma: no cover
         """Executors may need to get things started."""
@@ -146,16 +150,22 @@ class BaseExecutor(LoggingMixin):
             if SchedulingAction.START == action:
                 if ti.state not in State.running:
                     self._start_task_instance(key)
+                    self._send_message(ti)
             elif SchedulingAction.STOP == action:
                 if ti.state in State.unfinished:
-                    self._stop_task_instance(key)
+                    if self._stop_task_instance(key):
+                        self._send_message(ti)
             elif SchedulingAction.RESTART == action:
                 if ti.state in State.running:
                     self._restart_task_instance(key)
                 else:
                     self._start_task_instance(key)
+                self._send_message(ti)
             else:
                 raise ValueError('The task scheduling action must in ["START", "STOP", "RESTART"].')
+
+    def _send_message(self, ti):
+        self.send_message(TaskInstanceKey(ti.dag_id, ti.task_id, ti.execution_date, ti.try_number))
 
     def _start_task_instance(self, key: TaskInstanceKey):
         """
@@ -177,7 +187,8 @@ class BaseExecutor(LoggingMixin):
             ignore_ti_state=True,
             pool=ti.pool,
             file_path=ti.dag_model.fileloc,
-            pickle_id=ti.dag_model.pickle_id
+            pickle_id=ti.dag_model.pickle_id,
+            server_uri=self._server_uri,
         )
         ti.set_state(State.QUEUED)
         self.execute_async(
@@ -434,7 +445,7 @@ class BaseExecutor(LoggingMixin):
     def send_message(self, key: TaskInstanceKey):
         if self._mailbox is not None:
             ti = self.get_task_instance(key)
-            task_status_changed_event = TaskStatusChangedEvent(
+            task_status_changed_event = TaskStateChangedEvent(
                 ti.task_id,
                 ti.dag_id,
                 ti.execution_date,
