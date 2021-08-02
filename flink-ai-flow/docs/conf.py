@@ -126,4 +126,6 @@ def setup(app):
     dir=os.path.dirname(os.path.abspath(__file__))
     subprocess.call(['apt-get', 'install', '-y', '--no-install-recommends', 'npm'])
     subprocess.call(['npm', 'install', '--global', 'yarn'])
+    
+    # subprocess.call(['pip', 'install', '--index-url', 'https://test.pypi.org/simple/', '--extra-index-url', 'https://pypi.org/simple', 'ai-flow==0.0.9'])
     subprocess.call(['bash', dir+'/docgen.sh'])

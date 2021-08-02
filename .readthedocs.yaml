@@ -25,6 +25,7 @@ build:
   apt_packages:
     - default-libmysqlclient-dev
     - build-essential
+    - yarn
 
 
 python:
