@@ -125,7 +125,7 @@ def setup(app):
     app.connect('autodoc-skip-member', autodoc_skip_member)
     dir=os.path.dirname(os.path.abspath(__file__))
     # subprocess.call(['apt-get', 'install', '-y', '--no-install-recommends', 'npm'])
-    subprocess.call(['npm', 'install', 'yarn'])
+    subprocess.call(['which', 'npm'])
     
     # subprocess.call(['pip', 'install', '--index-url', 'https://test.pypi.org/simple/', '--extra-index-url', 'https://pypi.org/simple', 'ai-flow==0.0.9'])
     subprocess.call(['bash', os.path.dirname(dir)+'/install_aiflow.sh'])
