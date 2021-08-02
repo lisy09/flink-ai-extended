@@ -126,10 +126,4 @@ def autodoc_skip_member(app, what, name, obj, skip, options):
 def setup(app):
     app.connect('autodoc-skip-member', autodoc_skip_member)
     workdir = os.path.dirname(os.path.abspath(__file__))
-    flink_ai_flow_dir = os.path.dirname(workdir)
-    subprocess.call(['npm',  'install', '--globally', 'yarn'])
-    # subprocess.call(['pip', 'install', flink_ai_flow_dir + "/."])
-    # subprocess.call(['pip', 'install', flink_ai_flow_dir + "/."])
-    # subprocess.call(['pip', 'install', flink_ai_flow_dir+"/."])
-    subprocess.call(['bash', flink_ai_flow_dir + '/install_aiflow.sh'])
     subprocess.call(['bash', workdir + '/docgen.sh'])
