@@ -124,5 +124,6 @@ def autodoc_skip_member(app, what, name, obj, skip, options):
 def setup(app):
     app.connect('autodoc-skip-member', autodoc_skip_member)
     dir=os.path.dirname(os.path.abspath(__file__))
+    subprocess.call(['apt-get', 'install', '-y', '--no-install-recommends', 'npm'])
     subprocess.call(['npm', 'install', '--global', 'yarn'])
     subprocess.call(['bash', dir+'/docgen.sh'])
