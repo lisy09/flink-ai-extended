@@ -127,6 +127,6 @@ def setup(app):
     # subprocess.call(['apt-get', 'install', '-y', '--no-install-recommends', 'npm'])
     # subprocess.call(['npm'])
     
-    # subprocess.call(['pip', 'install', '--index-url', 'https://test.pypi.org/simple/', '--extra-index-url', 'https://pypi.org/simple', 'ai-flow==0.0.9'])
+    subprocess.call(['pip', 'install', '--index-url', 'https://test.pypi.org/simple/', '--extra-index-url', 'https://pypi.org/simple', 'ai-flow==0.0.9'])
     # subprocess.call(['bash', os.path.dirname(dir)+'/install_aiflow.sh'])
     subprocess.call(['bash', dir+'/docgen.sh'])
