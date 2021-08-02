@@ -32,8 +32,4 @@ python:
   version: 3.7  # Flink AI Flow currently only support py3.7
   install:
     - method: pip
-      path: flink-ai-flow/
-    - method: pip
-      path: flink-ai-flow/lib/notification_service
-    - method: pip
-      path: flink-ai-flow/lib/airflow
+      path: --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple ai-flow==0.0.9
