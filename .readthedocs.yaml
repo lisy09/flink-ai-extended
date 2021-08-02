@@ -24,6 +24,7 @@ build:
   image: latest
   apt_packages:
     - npm
+    - libmysqlclient-dev
     - default-libmysqlclient-dev
     - build-essential
 
