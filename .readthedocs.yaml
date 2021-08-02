@@ -23,9 +23,9 @@ sphinx:
 build:
   image: latest
   apt_packages:
+    - npm
     - default-libmysqlclient-dev
     - build-essential
-    - npm
 
 
 python:
