@@ -126,4 +126,8 @@ def autodoc_skip_member(app, what, name, obj, skip, options):
 def setup(app):
     app.connect('autodoc-skip-member', autodoc_skip_member)
     workdir = os.path.dirname(os.path.abspath(__file__))
+    print("######")
+    if os.environ['TEST'] is not None:
+        print("#######")
+        print(os.environ['TEST'])
     subprocess.call(['bash', workdir + '/docgen.sh'])
