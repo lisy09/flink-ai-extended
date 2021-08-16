@@ -1,16 +1,19 @@
-# issue: When using FlinkPythonProcessor, not calling execution_context.statement_set.add_insert_sql will lead to error, and missing job_id
+# issue: When using FlinkPythonProcessor, not calling execution_context.statement_set.add_insert_sql will result in error, and missing job_id
 
 ## Issue 
 
 ### Describe the bug
 
-当前实现下（https://github.com/alibaba/flink-ai-extended/commit/9dd9c6f312c21ae1334727e6cc334b958f2e4e54），使用FlinkPythonProcessor时，ai_flow_plugins/job_plugins/flink/flink_run_main.py#L75的实现会强制用户调用execution_context.statement_set.add_insert_sql，否则会报错。
+error version： https://github.com/alibaba/flink-ai-extended/commit/9dd9c6f312c21ae1334727e6cc334b958f2e4e54
 
-如果FlinkPythonProcessor的process方法里只有execution_context.table_env.execute_sql而没有execution_context.statement_set.add_insert_sql的话，上面的行会报错
+When using FlinkPythonProcessor under current implementation, ai_flow_plugins/job_plugins/flink/flink_run_main.py#L75 will force user to invoke execution_context.statement_set.add_insert_sql. 
+Otherwise airflow will show error for the workflow.
+
+In the case only execution_context.table_env.execute_sql occurs in FlinkPythonProcessor.process, error happens in the linve above:
 py4j.protocol.Py4JJavaError: An error occurred while calling o24.execute.
 : java.lang.IllegalStateException: No operators defined in streaming topology. Cannot generate StreamGraph
 
-另外，只调用execution_context.table_env.execute_sql的情况下，执行目录下的./job_id文件不会记录由execution_context.table_env.execute_sql触发的flink job的id。
+Futhermore, if user just calls execution_context.table_env.execute_sql without calling execution_context.statement_set.add_insert_sql, no job id of flink job will be logged at ${workdir}./job_id.
 
 ### Your environment
 Operating system
