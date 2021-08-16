@@ -39,7 +39,15 @@ Then run the workflow:
 python examples/issue_project/workflows/issue_workflow/issue_workflow.py
 ```
 
-## Error log
+### Expected behavior
+No error happens.
+
+### Actual behavior
+Error shown in airflow.
+
+### Additional context
+
+Error log
 
 ```bash
 cat logs/gen_static_user_feature_to_hive_stdout.log 
