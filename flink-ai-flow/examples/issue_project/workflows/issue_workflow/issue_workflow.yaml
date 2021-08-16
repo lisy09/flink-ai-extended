@@ -1,0 +1,9 @@
+gen_static_user_feature_to_hive:
+  job_type: flink
+  properties:
+    run_mode: cluster
+    flink_run_args:
+      - --jobmanager
+      - flink-jobmanager:8081
+  # periodic_config:
+  #   interval: '0,0,0,60'
